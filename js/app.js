@@ -59,60 +59,55 @@ const Screen1Modal = ({ onAccept }) => {
     return () => window.removeEventListener('resize', updateInitialRect);
   }, []);
 
-  // Move button away from mouse direction
-  /*
-  const escapeFromMouse = (e) => {
-    const btn = btnRef.current;
-    if (!btn)
-      return;
+  // Escuchar el mouse globalmente para saber cuándo entra a la caja original y cuándo se aleja
+  
+  React.useEffect(() => {
+    const handleGlobalMouseMove = (e) => {
+      if (!oriBtnRectRef.current)
+        return;
 
-    //Obtener las coordenadas de cada uno de los lados del botón
-    const rect = btn.getBoundingClientRect();
-    console.log(`app.js - escapeFromMouse() - btn.getBoundingClientRect(): ${JSON.stringify( rect )}`);
+      //Calcular la posición del mouse
+      const mx = e.clientX;
+      const my = e.clientY;
+      const oriRect = oriBtnRectRef.current;
 
-    //Si es la primera vez que el mouse se acerca al botón
-    if(!showHint){
-      setOriBtnRect( structuredClone(rect) )
-    }
+      // Verificar si el mouse está dentro de los límites del botón ORIGINAL
+      const margin = 15;
+      const isNearOriginalBox =
+        mx >= oriRect.left - margin &&
+        mx <= oriRect.right + margin &&
+        my >= oriRect.top - margin &&
+        my <= oriRect.bottom + margin;
+      console.log(`app.js - escapeFromMouse() - isNearOriginalBox: ${isNearOriginalBox}`);
 
-    //Calcular la posición del mouse
-    const mx = e.clientX;
-    const my = e.clientY;
+      if (isNearOriginalBox) {
+        // 1. SI EL MOUSE ENTRA A LA CAJA ORIGINAL -> HUIR
+        const cx = oriRect.left + oriRect.width / 2;
+        const cy = oriRect.top + oriRect.height / 2;
 
-    // Verificar si el mouse está dentro de los límites del botón ORIGINAL
-    const isInsideOriginalBox =
-      mx >= oriBtnRect.left &&
-      mx <= oriBtnRect.right &&
-      my >= oriBtnRect.top &&
-      my <= oriBtnRect.bottom;
-    console.log(`app.js - escapeFromMouse() - isInsideOriginalBox: ${isInsideOriginalBox}`);
+        const dx = mx - cx;
+        const dy = my - cy;
 
-    // Si el cursor no está en la caja original ni sobre el elemento desplazado
-    if (!isInsideOriginalBox && e.target !== btn)
-      return;
+        const distance = 140;
+        let nx = dx === 0 ? -distance : Math.sign(dx) * -distance;
+        let ny = dy === 0 ? -distance : Math.sign(dy) * -distance;
 
-    //Calcular el centro del botón
-    const cx = oriBtnRect.left + oriBtnRect.width / 2;
-    const cy = oriBtnRect.top + oriBtnRect.height / 2;
-    console.log(`app.js - escapeFromMouse() - (cx, cy): (${cx}, ${cy})`);
+        // Variación si está justo en el centro
+        if (Math.abs(dx) < 20) nx += (Math.random() - 0.5) * 60;
+        if (Math.abs(dy) < 20) ny += (Math.random() - 0.5) * 60;
 
-    // Vector from button center to mouse
-    const dx = mx - cx;
-    const dy = my - cy;
+        setOffset({ x: nx, y: ny });
+        setShowHint(true);
+      } else {
+        // 2. SI EL MOUSE SE ALEJA DE LA CAJA ORIGINAL -> REGRESAR A (0,0)
+        setOffset({ x: 0, y: 0 });
+      }
+    };
 
-    // Move opposite direction (escape)
-    const distance = 140;
-    let nx = dx === 0 ? 0 : Math.sign(dx) * -distance;
-    let ny = dy === 0 ? 0 : Math.sign(dy) * -distance;
-
-    // Si el mouse está muy centrado, añadir una pequeña variación aleatoria
-    if (Math.abs(dx) < 20) nx += (Math.random() - 0.5) * 60;
-    if (Math.abs(dy) < 20) ny += (Math.random() - 0.5) * 60;
-
-    // Update offset relative to original position using translate (keeps layout space, avoids disappearance)
-    setOffset({ x: nx, y: ny });
-    setShowHint(true);
-  };*/
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  }, [])
+  
 
   return (
     <div className="relative z-10 w-full max-w-md p-6" ref={containerRef}>
