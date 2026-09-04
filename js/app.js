@@ -1,6 +1,6 @@
 // Main App Controller Component
 const App = () => {
-  // Screen state: 1 = Date proposal, 2 = Confirmed, 3 = Date & time selection, 4 = Activities
+  // Screen state: 1 = Date proposal, 2 = Confirmed, 3 = Date & time selection, 4 = Activities, 5 = Final
   const [currentScreen, setCurrentScreen] = React.useState(1);
 
   const handleAcceptDate = () => {
@@ -23,6 +23,11 @@ const App = () => {
     setCurrentScreen(3);
   };
 
+  const handleGoToFinal = () => {
+    // Moves to Screen 5 (Final) when activity is selected
+    setCurrentScreen(5);
+  };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden font-sans">
       <FloatingHearts />
@@ -40,7 +45,11 @@ const App = () => {
       )}
 
       {currentScreen === 4 && (
-        <Screen4Activities onPrevious={handleGoDateForm} />
+        <Screen4Activities onPrevious={handleGoDateForm} onNext={handleGoToFinal} />
+      )}
+
+      {currentScreen === 5 && (
+        <Screen5 />
       )}
     </div>
   );
@@ -49,4 +58,8 @@ const App = () => {
 // Render Root Component
 const rootElement = document.getElementById('root');
 const root = ReactDOM.createRoot(rootElement);
-root.render(<App />);
+root.render(
+  React.createElement(ContextProvider, null,
+    React.createElement(App)
+  )
+);

@@ -1,6 +1,14 @@
 // Screen 4: Activities Selection (Final step)
 
-const Screen4Activities = ({ onPrevious }) => {
+const Screen4Activities = ({ onPrevious, onNext }) => {
+  // Access context for storing selected activity
+  const { setActivities } = window.useDateTime();
+
+  const handleSelectActivity = (act) => {
+    setActivities(act.label);
+    if (onNext) onNext();
+  };
+
   // Define activities with icons and descriptions
   const activities = [
     { icon: '🎬', label: 'Película', desc: 'Popcorn, cero spoiler y la mejor compañía 🍿' },
@@ -35,6 +43,7 @@ const Screen4Activities = ({ onPrevious }) => {
           {activities.map((act, idx) => (
             <button
               key={idx}
+              onClick={() => handleSelectActivity(act)}
               className="group relative p-5 rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50 border-2 border-rose-200 hover:scale-105 active:scale-95 transition-all duration-300 shadow hover:shadow-lg cursor-pointer flex flex-col items-center justify-center"
             >
               <span className="text-5xl mb-2 animate-pulse-glow">

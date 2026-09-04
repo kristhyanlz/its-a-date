@@ -1,11 +1,20 @@
 // Screen 3: Date & Time Selection Form
 
 const Screen3DateForm = ({ onNext }) => {
+
+  // Extraemos las funciones para actualizar el contexto global
+  const { date, setDate, time, setTime } = window.useDateTime();
+
+  //Valores del formulario
   const [dateVal, setDateVal] = React.useState('');
   const [timeVal, setTimeVal] = React.useState('');
 
   const handleSubmit = () => {
     if (dateVal && timeVal) {
+      //Guardamos en el contexto
+      setDate(dateVal);
+      setTime(timeVal);
+      //Pasamos a la siguiente pantalla
       onNext();
     }
   };
