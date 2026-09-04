@@ -21,7 +21,7 @@ const Screen1Modal = ({ onAccept }) => {
   const escapeFromMouse = (e) => {
       console.log("app.js - escapeFromMouse() - Start")
 
-      if (!showHintRef.current && btnRef.current) {
+      if (!showHintRef.current) {
         // Medir la posición sin ninguna transformación aplicada
         console.log(`app.js - escapeFromMouse() - showHint: ${showHint}`)
         console.log("app.js - escapeFromMouse() - update oriBtnRectRef")
@@ -51,7 +51,7 @@ const Screen1Modal = ({ onAccept }) => {
       console.log(`app.js - escapeFromMouse() - oriRect: ${JSON.stringify(oriRect)}`);
 
       // Verificar si el mouse está dentro de los límites del botón ORIGINAL
-      const margin = 5;
+      const margin = 25;
       const left = oriRect.left - margin;
       const right = oriRect.right + margin;
       const top = oriRect.top - margin;
