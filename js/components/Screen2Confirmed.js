@@ -5,7 +5,7 @@ const Screen2Confirmed = ({ onNext }) => {
     <div className="relative z-10 w-full max-w-md p-6">
       <div className="bg-white/90 backdrop-blur-md rounded-3xl pt-12 px-8 pb-8 shadow-2xl border-4 border-rose-200 text-center modal-pop relative ">
         {/* Animated Cute Decorative Elements */}
-        <div className="mb-6 flex justify-center relative">
+        <div className="mb-6 mt-4 flex justify-center relative">
           {/* Back Glow Effect */}
           <div className="absolute inset-0 bg-pink-300 rounded-full blur-xl opacity-30 animate-pulse"></div>
           
