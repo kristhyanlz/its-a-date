@@ -39,45 +39,78 @@ const Screen1Modal = ({ onAccept }) => {
   // useRef para guardar las coordenadas originales sin provocar re-renders
   const oriBtnRectRef = React.useRef(null);
 
-  // Guardar posición inicial al montar el componente
-  React.useEffect(() => {
-    const updateInitialRect = () => {
-      if (btnRef.current) {
-        // Medir la posición sin ninguna transformación aplicada
-        const currentTransform = btnRef.current.style.transform;
-        btnRef.current.style.transform = 'none';
-        oriBtnRectRef.current = btnRef.current.getBoundingClientRect();
-        btnRef.current.style.transform = currentTransform;
-      }
-    };
+  const showHintRef = React.useRef(false);
 
-    updateInitialRect();
-
-    //Para recalcular la posición inicial del botón si la pantalla cambia de tamaño u orientación
-    window.addEventListener('resize', updateInitialRect);
-    //Es la función de limpieza (cleanup function) de React inside del useEffect.
-    return () => window.removeEventListener('resize', updateInitialRect);
-  }, []);
+  //Funcion para actualizar showHint
+  const updateShowHint = (val) => {
+    showHintRef.current = val;
+    setShowHint(val);
+  }
+  
 
   // Escuchar el mouse globalmente para saber cuándo entra a la caja original y cuándo se aleja
-  
-  React.useEffect(() => {
-    const handleGlobalMouseMove = (e) => {
-      if (!oriBtnRectRef.current)
-        return;
+  const escapeFromMouse = (e) => {
+      console.log("app.js - escapeFromMouse() - Start")
+
+      if (!showHintRef.current && btnRef.current) {
+        // Medir la posición sin ninguna transformación aplicada
+        console.log(`app.js - escapeFromMouse() - showHint: ${showHint}`)
+        console.log("app.js - escapeFromMouse() - update oriBtnRectRef")
+        const currentTransform = btnRef.current.style.transform;
+        btnRef.current.style.transform = 'none';
+        const rect = btnRef.current.getBoundingClientRect();
+
+        oriBtnRectRef.current = {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          width: rect.width,
+          height: rect.height,
+        };
+        btnRef.current.style.transform = currentTransform;
+      }
+
+      //Validar que tenemos guardado el rect original
+      if (!oriBtnRectRef.current) return;
 
       //Calcular la posición del mouse
       const mx = e.clientX;
       const my = e.clientY;
       const oriRect = oriBtnRectRef.current;
+      console.log(`app.js - escapeFromMouse() - (mx, my): (${mx}, ${my})`);
+      console.log(`app.js - escapeFromMouse() - oriRect: ${JSON.stringify(oriRect)}`);
 
       // Verificar si el mouse está dentro de los límites del botón ORIGINAL
-      const margin = 15;
+      const margin = 5;
+      const left = oriRect.left - margin;
+      const right = oriRect.right + margin;
+      const top = oriRect.top - margin;
+      const bottom = oriRect.bottom + margin;
+      console.log(`app.js - escapeFromMouse() - Rect and Margin: ${JSON.stringify({
+        left,
+        right,
+        top,
+        bottom
+      })}`);
+
+
+      const isInLeft = mx >= left;
+      const isInRight = mx <= right;
+      const isInTop = my >= top;
+      const isInBottom = my <= bottom;
+      console.log(`app.js - escapeFromMouse() - Is in Rect and Margin: ${JSON.stringify({
+        isInLeft,
+        isInRight,
+        isInTop,
+        isInBottom
+      })}`);
+
       const isNearOriginalBox =
-        mx >= oriRect.left - margin &&
-        mx <= oriRect.right + margin &&
-        my >= oriRect.top - margin &&
-        my <= oriRect.bottom + margin;
+        isInLeft &&
+        isInRight &&
+        isInTop &&
+        isInBottom;
       console.log(`app.js - escapeFromMouse() - isNearOriginalBox: ${isNearOriginalBox}`);
 
       if (isNearOriginalBox) {
@@ -97,15 +130,18 @@ const Screen1Modal = ({ onAccept }) => {
         if (Math.abs(dy) < 20) ny += (Math.random() - 0.5) * 60;
 
         setOffset({ x: nx, y: ny });
-        setShowHint(true);
+        updateShowHint(true);
       } else {
         // 2. SI EL MOUSE SE ALEJA DE LA CAJA ORIGINAL -> REGRESAR A (0,0)
         setOffset({ x: 0, y: 0 });
       }
+      
     };
 
-    window.addEventListener('mousemove', handleGlobalMouseMove);
-    return () => window.removeEventListener('mousemove', handleGlobalMouseMove);
+  React.useEffect(() => {
+    //Escuchamos constantemente el movimiento del mouse, por eso showHint debe ser useState y useRef
+    window.addEventListener('mousemove', escapeFromMouse);
+    return () => window.removeEventListener('mousemove', escapeFromMouse);
   }, [])
   
 
@@ -144,6 +180,7 @@ const Screen1Modal = ({ onAccept }) => {
             ref={btnRef}
             onClick={(e) => {
               e.stopPropagation();
+              escapeFromMouse(e);
             }}
             style={{
               transform: `translate(${offset.x}px, ${offset.y}px)`,
