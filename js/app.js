@@ -32,8 +32,9 @@ const FloatingHearts = () => {
 
 // Screen 1: Date Proposal Modal Component
 const Screen1Modal = ({ onAccept }) => {
-  const [noPosition, setNoPosition] = React.useState(null);
   const [attempts, setAttempts] = React.useState(0);
+  const [offset, setOffset] = React.useState({ x: 0, y: 0 });
+  const btnRef = React.useRef(null);
   const containerRef = React.useRef(null);
 
   const noTexts = [
@@ -47,40 +48,52 @@ const Screen1Modal = ({ onAccept }) => {
     "¡Inténtalo otra vez! 🌹"
   ];
 
-  const moveNoButton = () => {
-    const btnWidth = 140;
-    const btnHeight = 50;
-    const padding = 30;
+  // Move button away from mouse direction
+  const escapeFromMouse = (e) => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const mx = e.clientX;
+    const my = e.clientY;
 
-    // Calculate safe bounds within viewport
-    const maxX = window.innerWidth - btnWidth - padding;
-    const maxY = window.innerHeight - btnHeight - padding;
+    // Vector from button center to mouse
+    const dx = mx - cx;
+    const dy = my - cy;
 
-    const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
-    const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+    // Move opposite direction (escape)
+    const distance = 140;
+    let nx = dx === 0 ? 0 : Math.sign(dx) * -distance;
+    let ny = dy === 0 ? 0 : Math.sign(dy) * -distance;
 
-    setNoPosition({ left: `${randomX}px`, top: `${randomY}px` });
+    // If mouse is very close horizontally/vertically, add random jitter so it doesn't lock
+    if (Math.abs(dx) < 20) nx += (Math.random() - 0.5) * 60;
+    if (Math.abs(dy) < 20) ny += (Math.random() - 0.5) * 60;
+
+    // Update offset relative to original position using translate (keeps layout space, avoids disappearance)
+    setOffset({ x: nx, y: ny });
     setAttempts((prev) => prev + 1);
   };
 
-  // Get current text for "No" button based on attempt count
-  const currentNoText = noTexts[Math.min(attempts, noTexts.length - 1)];
+  // Reset offset when mouse leaves button so it can be approached again (optional playful reset)
+  const resetPosition = () => {
+    setOffset({ x: 0, y: 0 });
+  };
 
-  // Yes button scale grows slightly with each attempt to click No
+  const currentNoText = noTexts[Math.min(attempts, noTexts.length - 1)];
   const yesScale = Math.min(1 + attempts * 0.08, 1.4);
 
   return (
-    <div className="relative z-10 w-full max-w-md p-6">
+    <div className="relative z-10 w-full max-w-md p-6" ref={containerRef}>
       <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-rose-200 text-center modal-pop relative overflow-hidden">
-        
-        {/* Animated Cute Sticker / Icon */}
+
         <div className="mb-4 flex justify-center">
           <div className="w-28 h-28 rounded-full bg-rose-100 flex items-center justify-center shadow-inner text-6xl animate-bounce">
             🐱❤️
           </div>
         </div>
 
-        {/* Title / Question */}
         <h1 className="text-3xl font-bold font-heading text-rose-600 mb-3 leading-snug">
           ¿Quieres tener una cita conmigo? ❤️
         </h1>
@@ -89,40 +102,34 @@ const Screen1Modal = ({ onAccept }) => {
           Prometo que será un momento inolvidable... ✨
         </p>
 
-        {/* Action Buttons Container */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 min-h-[60px] relative">
-          
+        {/* Buttons container: relative so translated button stays visible inside */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative min-h-[60px]">
+
           {/* YES Button */}
           <button
             onClick={onAccept}
             style={{ transform: `scale(${yesScale})` }}
-            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xl rounded-full shadow-lg transition-transform duration-200 ease-out active:scale-95 pulse-glow cursor-pointer z-10 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xl rounded-full shadow-lg transition-transform duration-200 ease-out active:scale-95 pulse-glow cursor-pointer z-10 flex items-center justify-center gap-2 shrink-0"
           >
             <span>¡Sí, me encantaría!</span>
             <span>💖</span>
           </button>
 
-          {/* NO Button (Escapes on hover/touch) */}
+          {/* NO Button - Escapes gracefully in opposite direction of mouse */}
           <button
-            onMouseEnter={moveNoButton}
-            onTouchStart={(e) => {
-              e.preventDefault();
-              moveNoButton();
+            ref={btnRef}
+            onMouseEnter={escapeFromMouse}
+            onMouseMove={escapeFromMouse}
+            onMouseLeave={resetPosition}
+            onClick={(e) => {
+              e.stopPropagation();
+              escapeFromMouse(e);
             }}
-            onClick={moveNoButton}
-            style={
-              noPosition
-                ? {
-                    position: 'fixed',
-                    left: noPosition.left,
-                    top: noPosition.top,
-                    zIndex: 50,
-                  }
-                : {}
-            }
-            className={`px-6 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-lg rounded-full shadow transition-all duration-150 btn-no-escaping cursor-pointer ${
-              noPosition ? 'fixed' : 'relative'
-            }`}
+            style={{
+              transform: `translate(${offset.x}px, ${offset.y}px)`,
+              transition: 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)',
+            }}
+            className="px-6 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-lg rounded-full shadow transition-colors duration-150 cursor-pointer select-none shrink-0 z-20"
           >
             {currentNoText}
           </button>
@@ -130,7 +137,7 @@ const Screen1Modal = ({ onAccept }) => {
 
         {attempts > 2 && (
           <p className="text-xs text-rose-400 mt-6 animate-pulse font-semibold">
-            PS: El botón "No" se asusta si te le acercas... 😉
+            PS: ¡El botón "No" huye del cursor! 😉 Elige "Sí" para ganar.
           </p>
         )}
 
