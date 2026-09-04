@@ -11,7 +11,7 @@ const FloatingHearts = () => {
   ];
 
   return (
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {hearts.map((h) => (
         <span
           key={h.id}
@@ -32,31 +32,69 @@ const FloatingHearts = () => {
 
 // Screen 1: Date Proposal Modal Component
 const Screen1Modal = ({ onAccept }) => {
-  const [attempts, setAttempts] = React.useState(0);
+  const [showHint, setShowHint] = React.useState(false);
   const [offset, setOffset] = React.useState({ x: 0, y: 0 });
   const btnRef = React.useRef(null);
   const containerRef = React.useRef(null);
+  // useRef para guardar las coordenadas originales sin provocar re-renders
+  const oriBtnRectRef = React.useRef(null);
 
-  const noTexts = [
-    "No 💔",
-    "¿Segura? 🥺",
-    "¡Oye! 🙈",
-    "¡Piénsalo bien! 💖",
-    "¡Esa opción no vale! 😂",
-    "¡Di que sí! 🥰",
-    "¡No puedes decir que no! 😜",
-    "¡Inténtalo otra vez! 🌹"
-  ];
+  // Guardar posición inicial al montar el componente
+  React.useEffect(() => {
+    const updateInitialRect = () => {
+      if (btnRef.current) {
+        // Medir la posición sin ninguna transformación aplicada
+        const currentTransform = btnRef.current.style.transform;
+        btnRef.current.style.transform = 'none';
+        oriBtnRectRef.current = btnRef.current.getBoundingClientRect();
+        btnRef.current.style.transform = currentTransform;
+      }
+    };
+
+    updateInitialRect();
+
+    //Para recalcular la posición inicial del botón si la pantalla cambia de tamaño u orientación
+    window.addEventListener('resize', updateInitialRect);
+    //Es la función de limpieza (cleanup function) de React inside del useEffect.
+    return () => window.removeEventListener('resize', updateInitialRect);
+  }, []);
 
   // Move button away from mouse direction
+  /*
   const escapeFromMouse = (e) => {
     const btn = btnRef.current;
-    if (!btn) return;
+    if (!btn)
+      return;
+
+    //Obtener las coordenadas de cada uno de los lados del botón
     const rect = btn.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
+    console.log(`app.js - escapeFromMouse() - btn.getBoundingClientRect(): ${JSON.stringify( rect )}`);
+
+    //Si es la primera vez que el mouse se acerca al botón
+    if(!showHint){
+      setOriBtnRect( structuredClone(rect) )
+    }
+
+    //Calcular la posición del mouse
     const mx = e.clientX;
     const my = e.clientY;
+
+    // Verificar si el mouse está dentro de los límites del botón ORIGINAL
+    const isInsideOriginalBox =
+      mx >= oriBtnRect.left &&
+      mx <= oriBtnRect.right &&
+      my >= oriBtnRect.top &&
+      my <= oriBtnRect.bottom;
+    console.log(`app.js - escapeFromMouse() - isInsideOriginalBox: ${isInsideOriginalBox}`);
+
+    // Si el cursor no está en la caja original ni sobre el elemento desplazado
+    if (!isInsideOriginalBox && e.target !== btn)
+      return;
+
+    //Calcular el centro del botón
+    const cx = oriBtnRect.left + oriBtnRect.width / 2;
+    const cy = oriBtnRect.top + oriBtnRect.height / 2;
+    console.log(`app.js - escapeFromMouse() - (cx, cy): (${cx}, ${cy})`);
 
     // Vector from button center to mouse
     const dx = mx - cx;
@@ -67,22 +105,14 @@ const Screen1Modal = ({ onAccept }) => {
     let nx = dx === 0 ? 0 : Math.sign(dx) * -distance;
     let ny = dy === 0 ? 0 : Math.sign(dy) * -distance;
 
-    // If mouse is very close horizontally/vertically, add random jitter so it doesn't lock
+    // Si el mouse está muy centrado, añadir una pequeña variación aleatoria
     if (Math.abs(dx) < 20) nx += (Math.random() - 0.5) * 60;
     if (Math.abs(dy) < 20) ny += (Math.random() - 0.5) * 60;
 
     // Update offset relative to original position using translate (keeps layout space, avoids disappearance)
     setOffset({ x: nx, y: ny });
-    setAttempts((prev) => prev + 1);
-  };
-
-  // Reset offset when mouse leaves button so it can be approached again (optional playful reset)
-  const resetPosition = () => {
-    setOffset({ x: 0, y: 0 });
-  };
-
-  const currentNoText = noTexts[Math.min(attempts, noTexts.length - 1)];
-  const yesScale = Math.min(1 + attempts * 0.08, 1.4);
+    setShowHint(true);
+  };*/
 
   return (
     <div className="relative z-10 w-full max-w-md p-6" ref={containerRef}>
@@ -108,7 +138,6 @@ const Screen1Modal = ({ onAccept }) => {
           {/* YES Button */}
           <button
             onClick={onAccept}
-            style={{ transform: `scale(${yesScale})` }}
             className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-extrabold text-xl rounded-full shadow-lg transition-transform duration-200 ease-out active:scale-95 pulse-glow cursor-pointer z-10 flex items-center justify-center gap-2 shrink-0"
           >
             <span>¡Sí, me encantaría!</span>
@@ -118,12 +147,8 @@ const Screen1Modal = ({ onAccept }) => {
           {/* NO Button - Escapes gracefully in opposite direction of mouse */}
           <button
             ref={btnRef}
-            onMouseEnter={escapeFromMouse}
-            onMouseMove={escapeFromMouse}
-            onMouseLeave={resetPosition}
             onClick={(e) => {
               e.stopPropagation();
-              escapeFromMouse(e);
             }}
             style={{
               transform: `translate(${offset.x}px, ${offset.y}px)`,
@@ -131,13 +156,13 @@ const Screen1Modal = ({ onAccept }) => {
             }}
             className="px-6 py-3.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-lg rounded-full shadow transition-colors duration-150 cursor-pointer select-none shrink-0 z-20"
           >
-            {currentNoText}
+            No 💔
           </button>
         </div>
 
-        {attempts > 2 && (
+        {showHint && (
           <p className="text-xs text-rose-400 mt-6 animate-pulse font-semibold">
-            PS: ¡El botón "No" huye del cursor! 😉 Elige "Sí" para ganar.
+            ¡Ríndete y acepta! 😉
           </p>
         )}
 
