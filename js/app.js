@@ -18,9 +18,9 @@ const App = () => {
     setCurrentScreen(4);
   };
 
-  const handleRestart = () => {
+  const handleGoDateForm = () => {
     // Reinicia la experiencia completa
-    setCurrentScreen(1);
+    setCurrentScreen(3);
   };
 
   return (
@@ -40,7 +40,7 @@ const App = () => {
       )}
 
       {currentScreen === 4 && (
-        <Screen4Activities onRestart={handleRestart} />
+        <Screen4Activities onPrevious={handleGoDateForm} />
       )}
     </div>
   );

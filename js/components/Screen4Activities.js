@@ -1,6 +1,6 @@
 // Screen 4: Activities Selection (Final step)
 
-const Screen4Activities = ({ onRestart }) => {
+const Screen4Activities = ({ onPrevious }) => {
   // Define activities with icons and descriptions
   const activities = [
     { icon: '🎬', label: 'Película', desc: 'Popcorn, cero spoiler y la mejor compañía 🍿' },
@@ -13,11 +13,11 @@ const Screen4Activities = ({ onRestart }) => {
 
   return (
     <div className="relative z-10 w-full max-w-2xl p-6">
-      <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-rose-200 text-center modal-pop relative overflow-hidden">
+      <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-2xl border-4 border-rose-200 text-center modal-pop relative">
 
         {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-4 mt-4">
             <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-pink-100 to-rose-100 flex items-center justify-center shadow-inner text-5xl animate-bounce">
               🎉✨
             </div>
@@ -53,10 +53,10 @@ const Screen4Activities = ({ onRestart }) => {
         {/* Footer button */}
         <div className="flex justify-center">
           <button
-            onClick={onRestart}
+            onClick={onPrevious}
             className="px-8 py-3 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 cursor-pointer pulse-glow"
           >
-            Reiniciar cita 💖
+            Cambiar fecha 💖
           </button>
         </div>
 
