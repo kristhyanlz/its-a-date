@@ -18,6 +18,11 @@ const App = () => {
     setCurrentScreen(4);
   };
 
+  const handleRestart = () => {
+    // Reinicia la experiencia completa
+    setCurrentScreen(1);
+  };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden font-sans">
       <FloatingHearts />
@@ -32,6 +37,10 @@ const App = () => {
 
       {currentScreen === 3 && (
         <Screen3DateForm onNext={handleDateSubmit} />
+      )}
+
+      {currentScreen === 4 && (
+        <Screen4Activities onRestart={handleRestart} />
       )}
     </div>
   );
